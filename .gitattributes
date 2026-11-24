@@ -1,0 +1,2 @@
+# Keep LF everywhere so test-page bytes (and the content hashes in run records) match on every OS.
+* text=auto eol=lf
