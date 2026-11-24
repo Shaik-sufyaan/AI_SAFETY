@@ -29,13 +29,20 @@ describe("live-run gate", () => {
     expect(liveRunStatus("localhost:3000")).toMatchObject({ liveRuns: false });
   });
 
-  it("is on only for localhost hosts", () => {
+  it("is password-free only on the local dev server with a localhost host", () => {
     process.env.ENABLE_LIVE_RUNS = "true";
     process.env.ANTHROPIC_API_KEY = "test-key";
-    expect(liveRunStatus("localhost:3000").liveRuns).toBe(true);
+    const env = process.env as Record<string, string | undefined>;
+    const savedNodeEnv = env.NODE_ENV;
+    env.NODE_ENV = "development";
+    expect(liveRunStatus("localhost:3000")).toMatchObject({ liveRuns: true, needsPassword: false });
     expect(liveRunStatus("127.0.0.1:3000").liveRuns).toBe(true);
     expect(liveRunStatus("my-site.vercel.app").liveRuns).toBe(false);
     expect(liveRunStatus(null).liveRuns).toBe(false);
+    // A production server never trusts Host: localhost on its own.
+    env.NODE_ENV = "production";
+    expect(liveRunStatus("localhost:3000").liveRuns).toBe(false);
+    env.NODE_ENV = savedNodeEnv;
   });
 
   it("remote hosts need LIVE_RUNS_ALLOW_REMOTE and a long enough password", () => {

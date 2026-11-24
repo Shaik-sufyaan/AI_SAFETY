@@ -39,16 +39,21 @@ export function liveRunStatus(hostHeader: string | null): LiveStatus {
   if (!process.env.ANTHROPIC_API_KEY) {
     return off("No ANTHROPIC_API_KEY is configured on the server, so no live evaluation can run.");
   }
-  // The Host header is client-controlled, so it is never trusted to waive the
-  // password: once remote runs are enabled (or we are on a hosted platform),
-  // every run needs the password, whatever Host says.
+  // The Host header is client-controlled, so it is never the only reason to
+  // waive the password. Password-free runs require ALL of: remote mode off,
+  // not a hosted platform, the development server (`npm run dev`, which this
+  // project binds to 127.0.0.1 so nothing off this machine can reach it), and
+  // a localhost Host. Everything else needs LIVE_RUNS_ALLOW_REMOTE + password.
   const remoteMode = process.env.LIVE_RUNS_ALLOW_REMOTE === "true";
   const hosted = Boolean(process.env.VERCEL);
+  const devServer = process.env.NODE_ENV === "development";
   if (!remoteMode) {
-    if (!hosted && isLocalHost(hostHeader)) {
-      return { liveRuns: true, needsPassword: false, reason: "Live runs are enabled on this local server." };
+    if (!hosted && devServer && isLocalHost(hostHeader)) {
+      return { liveRuns: true, needsPassword: false, reason: "Live runs are enabled on this local development server." };
     }
-    return off("Live runs are only accepted on a local server (localhost).");
+    return off(
+      "Password-free live runs only work under `npm run dev` on your own machine. Elsewhere, set LIVE_RUNS_ALLOW_REMOTE=true and a LIVE_RUN_PASSWORD.",
+    );
   }
   if ((process.env.LIVE_RUN_PASSWORD ?? "").length < MIN_PASSWORD_LENGTH) {
     return off(`Remote live runs need a LIVE_RUN_PASSWORD of at least ${MIN_PASSWORD_LENGTH} characters on the server.`);

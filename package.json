@@ -5,7 +5,7 @@
   "type": "module",
   "description": "A small, ethical prompt-injection evaluation for browser agents, using fictional locally hosted pages.",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
