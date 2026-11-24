@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_MAX_STEPS, DEFAULT_MODEL, formatUsd, HARD_MAX_STEPS, MODELS, preRunEstimate } from "@/lib/pricing";
 
-type Status = { liveRuns: boolean; reason: string } | null;
+type Status = { liveRuns: boolean; needsPassword?: boolean; reason: string } | null;
 type Result =
-  | { kind: "ok"; id: string; finalAnswer: string | null; attackSuccess: boolean | null; taskSuccess: boolean; endReason: string; costUsd: number | null; tokens: number }
+  | { kind: "ok"; id: string; saved: boolean; record: unknown; finalAnswer: string | null; attackSuccess: boolean | null; taskSuccess: boolean; endReason: string; costUsd: number | null; tokens: number }
   | { kind: "error"; message: string };
 
 export function RunPanel({ caseId, pageChars }: { caseId: string; pageChars: { raw_html: number; rendered_text: number } }) {
@@ -16,6 +16,7 @@ export function RunPanel({ caseId, pageChars }: { caseId: string; pageChars: { r
   const [mode, setMode] = useState<"raw_html" | "rendered_text">("raw_html");
   const [prompt, setPrompt] = useState<"baseline" | "cautious">("baseline");
   const [effort, setEffort] = useState<"low" | "medium" | "high">("medium");
+  const [password, setPassword] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
@@ -59,7 +60,7 @@ export function RunPanel({ caseId, pageChars }: { caseId: string; pageChars: { r
       const res = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ caseId, model, maxSteps, observationMode: mode, systemPrompt: prompt, effort }),
+        body: JSON.stringify({ caseId, model, maxSteps, observationMode: mode, systemPrompt: prompt, effort, ...(status?.needsPassword ? { password } : {}) }),
       });
       const data = await res.json().catch(() => ({ error: `Server returned ${res.status}.` }));
       if (!res.ok) setResult({ kind: "error", message: data.error ?? `Server returned ${res.status}.` });
@@ -102,6 +103,20 @@ export function RunPanel({ caseId, pageChars }: { caseId: string; pageChars: { r
           />
           <span className="hint">1 to {HARD_MAX_STEPS}. The loop stops here even mid-task.</span>
         </div>
+        {status.needsPassword && (
+          <div className="field">
+            <label htmlFor="rp-password">Run password</label>
+            <input
+              id="rp-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              disabled={running}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <span className="hint">The LIVE_RUN_PASSWORD set on this deployment.</span>
+          </div>
+        )}
         <div className="field">
           <label htmlFor="rp-mode">What the agent sees</label>
           <select id="rp-mode" value={mode} onChange={(e) => setMode(e.target.value as typeof mode)} disabled={running}>
@@ -133,7 +148,7 @@ export function RunPanel({ caseId, pageChars }: { caseId: string; pageChars: { r
       </p>
 
       {!confirming ? (
-        <button type="button" className="tab-btn" onClick={() => setConfirming(true)} disabled={running}>
+        <button type="button" className="tab-btn" onClick={() => setConfirming(true)} disabled={running || (Boolean(status.needsPassword) && password.length === 0)}>
           Run this case once
         </button>
       ) : (
@@ -155,13 +170,26 @@ export function RunPanel({ caseId, pageChars }: { caseId: string; pageChars: { r
         {result?.kind === "ok" && (
           <div className="notice">
             <p style={{ marginBottom: "0.4rem" }}>
-              Run saved. Ended: {result.endReason}. Task {result.taskSuccess ? "succeeded" : "failed"}.
+              Run finished. Ended: {result.endReason}. Task {result.taskSuccess ? "succeeded" : "failed"}.
               {result.attackSuccess !== null && <> Attack {result.attackSuccess ? "succeeded" : "did not succeed"}.</>} {result.tokens.toLocaleString()} tokens,
               est. {formatUsd(result.costUsd)}.
             </p>
-            <p style={{ margin: 0 }}>
-              <Link href={`/results/${result.id}`}>Open the full run record</Link>
-            </p>
+            {result.saved ? (
+              <p style={{ margin: 0 }}>
+                <Link href={`/results/${result.id}`}>Open the full run record</Link>
+              </p>
+            ) : (
+              <p style={{ margin: 0 }}>
+                This server cannot write files, so the run was not saved. Final answer: <code>{JSON.stringify(result.finalAnswer)}</code>.{" "}
+                <a
+                  href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(result.record, null, 2) + "\n")}`}
+                  download={`${result.id}.json`}
+                >
+                  Download the run record
+                </a>{" "}
+                and commit it to <code>results/runs/</code> to publish it.
+              </p>
+            )}
           </div>
         )}
       </div>

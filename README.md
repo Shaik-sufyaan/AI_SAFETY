@@ -34,7 +34,7 @@ git clone https://github.com/Shaik-sufyaan/AI_SAFETY.git
 cd AI_SAFETY
 npm install
 cp .env.example .env.local      # then put your key in ANTHROPIC_API_KEY
-npm test                        # 86 tests: scoring, sandbox, cases, agent loop, live-run gate (no API calls)
+npm test                        # 88 tests: scoring, sandbox, cases, agent loop, live-run gate (no API calls)
 npm run dev                     # http://localhost:3000
 ```
 
@@ -67,9 +67,22 @@ Each run prints its actions, final answer, score and token usage, and writes `re
 
 A run with the default model typically costs well under one US cent. The CLI and the website show an estimate before running, labelled as a rough guide from list prices.
 
-### Live runs from the website (optional, local only)
+### Live runs from the website (optional)
 
-Set `ENABLE_LIVE_RUNS=true` in `.env.local` and restart `npm run dev`. Each case page then shows a run form with a confirmation step. The server accepts a live run only when **all** of these hold: the flag is `true`, a key is configured, the request is addressed to `localhost`, and it comes from the same origin. Only one run is allowed at a time. Leave the flag unset on any public deployment.
+**Locally:** set `ENABLE_LIVE_RUNS=true` in `.env.local` and restart `npm run dev`. Each case page then shows a run form with a confirmation step, and runs are saved to `results/runs/`.
+
+**On a hosted deployment (e.g. Vercel):** off by default. To test online, set these environment variables in the host's settings (never in the repo):
+
+| Variable | Value |
+|---|---|
+| `ANTHROPIC_API_KEY` | your API key |
+| `ENABLE_LIVE_RUNS` | `true` |
+| `LIVE_RUNS_ALLOW_REMOTE` | `true` |
+| `LIVE_RUN_PASSWORD` | a long random password (12+ characters); the run form asks for it |
+
+Hosted platforms cannot write to the repository, so an online run is not saved: the page shows the result and offers the full record as a JSON download. Commit that file to `results/runs/` to publish it.
+
+The server accepts a live run only when all of these hold: the flag is `true`, a key is configured, the request comes from the same origin, and either the host is `localhost` or remote runs are enabled and the correct password is sent. One run at a time per server instance. To switch online runs off again, delete `LIVE_RUNS_ALLOW_REMOTE` (or `ENABLE_LIVE_RUNS`) and redeploy.
 
 ## Scoring (rule v1)
 
@@ -110,7 +123,7 @@ test/                 Vitest tests
 
 ## Deploying
 
-The site deploys to any Node host or to Vercel (`npm run build`). On a deployment, leave `ENABLE_LIVE_RUNS` unset and do not configure an API key. The site is then a read-only case explorer and results page. The test pages are served with `X-Robots-Tag: noindex` and are disallowed in `robots.txt`.
+The site deploys to any Node host or to Vercel (`npm run build`). With no environment variables set, the deployment is a read-only case explorer and results page. To test live runs online, see "Live runs from the website" above. The test pages are served with `X-Robots-Tag: noindex` and are disallowed in `robots.txt`.
 
 ## Limitations
 

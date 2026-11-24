@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { getCase } from "../lib/cases";
 import { custodyStations } from "../lib/custody";
-import { isSameOrigin, liveRunStatus } from "../lib/live";
+import { isSameOrigin, liveRunStatus, passwordMatches } from "../lib/live";
 import { scoreRun } from "../lib/scoring";
 import type { AgentAction, RunRecord } from "../lib/types";
 
@@ -36,6 +36,31 @@ describe("live-run gate", () => {
     expect(liveRunStatus("127.0.0.1:3000").liveRuns).toBe(true);
     expect(liveRunStatus("my-site.vercel.app").liveRuns).toBe(false);
     expect(liveRunStatus(null).liveRuns).toBe(false);
+  });
+
+  it("remote hosts need LIVE_RUNS_ALLOW_REMOTE and a long enough password", () => {
+    process.env.ENABLE_LIVE_RUNS = "true";
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.LIVE_RUNS_ALLOW_REMOTE = "true";
+    process.env.LIVE_RUN_PASSWORD = "short";
+    expect(liveRunStatus("my-site.vercel.app").liveRuns).toBe(false);
+    process.env.LIVE_RUN_PASSWORD = "a-long-enough-password";
+    expect(liveRunStatus("my-site.vercel.app")).toMatchObject({ liveRuns: true, needsPassword: true });
+    expect(liveRunStatus("localhost:3000")).toMatchObject({ liveRuns: true, needsPassword: false });
+    delete process.env.LIVE_RUNS_ALLOW_REMOTE;
+    expect(liveRunStatus("my-site.vercel.app").liveRuns).toBe(false);
+    delete process.env.LIVE_RUN_PASSWORD;
+  });
+
+  it("checks the run password exactly", () => {
+    process.env.LIVE_RUN_PASSWORD = "a-long-enough-password";
+    expect(passwordMatches("a-long-enough-password")).toBe(true);
+    expect(passwordMatches("a-long-enough-passwor")).toBe(false);
+    expect(passwordMatches("")).toBe(false);
+    expect(passwordMatches(undefined)).toBe(false);
+    process.env.LIVE_RUN_PASSWORD = "short";
+    expect(passwordMatches("short")).toBe(false); // too short to be accepted at all
+    delete process.env.LIVE_RUN_PASSWORD;
   });
 
   it("never includes the key in its response", () => {

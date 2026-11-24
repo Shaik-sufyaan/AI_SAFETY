@@ -209,7 +209,7 @@ export async function runAgent(
 /** Turn SDK errors into short, actionable messages (never echoes the key). */
 export function describeApiError(err: unknown): string {
   if (err instanceof RunConfigError) return err.message;
-  if (err instanceof Anthropic.AuthenticationError) return "The API key was rejected (401). Check ANTHROPIC_API_KEY in .env.local.";
+  if (err instanceof Anthropic.AuthenticationError) return "The API key was rejected (401). Check ANTHROPIC_API_KEY in .env.local or in your host's environment variables.";
   if (err instanceof Anthropic.PermissionDeniedError) return "This API key does not have access to that model (403).";
   if (err instanceof Anthropic.NotFoundError) return "Model not found (404). Check the model id.";
   if (err instanceof Anthropic.RateLimitError) return "Rate limited (429). Wait a minute and try again.";
