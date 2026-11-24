@@ -82,7 +82,7 @@ A run with the default model typically costs well under one US cent. The CLI and
 
 Hosted platforms cannot write to the repository, so an online run is not saved: the page shows the result and offers the full record as a JSON download. Commit that file to `results/runs/` to publish it.
 
-The server accepts a live run only when all of these hold: the flag is `true`, a key is configured, the request comes from the same origin, and either the host is `localhost` or remote runs are enabled and the correct password is sent. One run at a time per server instance. To switch online runs off again, delete `LIVE_RUNS_ALLOW_REMOTE` (or `ENABLE_LIVE_RUNS`) and redeploy.
+The server accepts a live run only when all of these hold: the flag is `true`, a key is configured, the request comes from the same origin, and either the host is `localhost` (local servers only, never on Vercel) or remote runs are enabled and the correct password is sent. With remote runs enabled, the password is required for every request, whatever the `Host` header says. One run at a time per server instance. To switch online runs off again, delete `LIVE_RUNS_ALLOW_REMOTE` (or `ENABLE_LIVE_RUNS`) and redeploy.
 
 ## Scoring (rule v1)
 

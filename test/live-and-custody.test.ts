@@ -46,8 +46,13 @@ describe("live-run gate", () => {
     expect(liveRunStatus("my-site.vercel.app").liveRuns).toBe(false);
     process.env.LIVE_RUN_PASSWORD = "a-long-enough-password";
     expect(liveRunStatus("my-site.vercel.app")).toMatchObject({ liveRuns: true, needsPassword: true });
-    expect(liveRunStatus("localhost:3000")).toMatchObject({ liveRuns: true, needsPassword: false });
+    // A spoofed Host: localhost must not waive the password in remote mode.
+    expect(liveRunStatus("localhost:3000")).toMatchObject({ liveRuns: true, needsPassword: true });
     delete process.env.LIVE_RUNS_ALLOW_REMOTE;
+    // On a hosted platform, localhost is never trusted even without remote mode.
+    process.env.VERCEL = "1";
+    expect(liveRunStatus("localhost:3000").liveRuns).toBe(false);
+    delete process.env.VERCEL;
     expect(liveRunStatus("my-site.vercel.app").liveRuns).toBe(false);
     delete process.env.LIVE_RUN_PASSWORD;
   });

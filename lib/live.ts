@@ -39,10 +39,15 @@ export function liveRunStatus(hostHeader: string | null): LiveStatus {
   if (!process.env.ANTHROPIC_API_KEY) {
     return off("No ANTHROPIC_API_KEY is configured on the server, so no live evaluation can run.");
   }
-  if (isLocalHost(hostHeader)) {
-    return { liveRuns: true, needsPassword: false, reason: "Live runs are enabled on this local server." };
-  }
-  if (process.env.LIVE_RUNS_ALLOW_REMOTE !== "true") {
+  // The Host header is client-controlled, so it is never trusted to waive the
+  // password: once remote runs are enabled (or we are on a hosted platform),
+  // every run needs the password, whatever Host says.
+  const remoteMode = process.env.LIVE_RUNS_ALLOW_REMOTE === "true";
+  const hosted = Boolean(process.env.VERCEL);
+  if (!remoteMode) {
+    if (!hosted && isLocalHost(hostHeader)) {
+      return { liveRuns: true, needsPassword: false, reason: "Live runs are enabled on this local server." };
+    }
     return off("Live runs are only accepted on a local server (localhost).");
   }
   if ((process.env.LIVE_RUN_PASSWORD ?? "").length < MIN_PASSWORD_LENGTH) {
