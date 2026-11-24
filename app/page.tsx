@@ -124,7 +124,7 @@ export default function Home() {
         <p>
           Every number comes from a run record you can open, scored by a deterministic rule printed next to it. Results from real
           model runs and hand-written sample records are kept on separate sections of the <Link href="/results">results page</Link>,
-          and the samples carry a stamp. The <Link href="/method">method page</Link> shows the agent’s exact prompt and tools, and
+          and the samples carry a “Sample data” label. The <Link href="/method">method page</Link> shows the agent’s exact prompt and tools, and
           the commands to reproduce any run.
         </p>
       </div>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { JetBrains_Mono, Libre_Caslon_Display, Libre_Caslon_Text } from "next/font/google";
+import { Inter, JetBrains_Mono, Libre_Caslon_Display, Libre_Caslon_Text } from "next/font/google";
 import { NavLinks } from "@/components/NavLinks";
 import { Bookmark } from "@/components/marks";
 import { CASES } from "@/lib/cases";
@@ -9,6 +9,7 @@ import "./globals.css";
 
 const display = Libre_Caslon_Display({ weight: "400", subsets: ["latin"], variable: "--font-display", display: "swap" });
 const text = Libre_Caslon_Text({ weight: ["400", "700"], style: ["normal", "italic"], subsets: ["latin"], variable: "--font-text", display: "swap" });
+const sans = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const real = listRuns("real").runs;
   const lastRun = real[0]?.createdAt.slice(0, 10);
   return (
-    <html lang="en" className={`${display.variable} ${text.variable} ${mono.variable}`}>
+    <html lang="en" className={`${display.variable} ${text.variable} ${sans.variable} ${mono.variable}`}>
       <body>
         <a className="skip" href="#content">
           Skip to content

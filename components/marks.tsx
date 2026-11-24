@@ -63,11 +63,10 @@ export function StateDot({ state, size = 16 }: { state: StationState; size?: num
   }
 }
 
-export function Stamp({ title = "Sample", sub = "No model" }: { title?: string; sub?: string }) {
+export function Stamp({ title = "Sample data", sub = "Not a model run" }: { title?: string; sub?: string }) {
   return (
     <div className="stamp" role="img" aria-label={`${title}: ${sub}`}>
       <div>
-        <span>Illustrative</span>
         <b>{title}</b>
         <span>{sub}</span>
       </div>

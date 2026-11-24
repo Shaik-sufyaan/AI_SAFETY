@@ -57,7 +57,7 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
         <div className="sample-band">
           <Stamp />
           <p>
-            <strong>NOT A MODEL RUN.</strong> {r.sampleNotice}
+            {(r.sampleNotice ?? "").replace(/^SAMPLE DATA\.\s*/, "")}
           </p>
         </div>
       ) : (
