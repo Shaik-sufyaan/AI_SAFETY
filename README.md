@@ -27,7 +27,7 @@ All organisations, domains (`*.example`), prices and timetables are invented. At
 
 ## Setup
 
-Requires Node.js 20.12 or newer.
+Requires Node.js 22.
 
 ```bash
 git clone https://github.com/Shaik-sufyaan/AI_SAFETY.git
